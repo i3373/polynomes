@@ -304,6 +304,27 @@ class Polynom {
 
         friend Polynom gcd(Polynom a, Polynom b);
         friend Polynom random(long long degree);
+
+        static Polynom first(int degree, int q) {
+            vector<long long> coeffs(degree + 1, 0);
+            coeffs[1] = 1;
+            return Polynom(coeffs);
+        }
+
+        bool isLast() {
+            for (long long c : coeffs) {
+                if (c != GF - 1) return false;
+            }
+            return true;
+        }
+    
+        void next() {
+            for (size_t i = 0; i < coeffs.size(); i++) {
+                coeffs[i]++;
+                if (coeffs[i] < GF) return;
+                coeffs[i] = 0;
+            }
+        }
 };
 
 Polynom random(long long degree) {
@@ -320,6 +341,9 @@ Polynom gcd(Polynom a, Polynom b) {
         Polynom temp = a % b;
         a = b;
         b = temp;
+    }
+    if(a.degree() == 0) {
+        a.coeffs[0] = 1;
     }
     return a;
 }

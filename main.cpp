@@ -28,35 +28,32 @@ Polynom repeated_squaring(Polynom a, long long n, Polynom f){
     return result % f;
 }
 
+
 Polynom equal_degree_splitting(Polynom f, int d) {
-    Polynom a = random(f.degree());
-    if(a.degree() == 0) {
-        return Polynom({0});
-    }
+    for (Polynom a = Polynom::first(f.degree(), Polynom::getGF()); !a.isLast(); a.next()) {
+        if (a.degree() == 0 || a.degree() == -1) {
+            continue;
+        }
 
-    Polynom g1 = gcd(a, f);
-
-    if(g1 != 1) {
-        return g1;
-    }
-
-    Polynom b = repeated_squaring(a, (power(a.getGF(), d) - 1) / 2, f);
-    Polynom g2 = gcd(b - 1, f);
-    if(g2 != 1 && g2 != f) {
-        return g2;
-    } else {
-        return Polynom({0});
-    }
+        Polynom g1 = gcd(a, f);
+        if (g1 != 1) {
+            return g1;
+        }    
+    }    
+    return Polynom({0});
 }
 
 
 void equal_degree_factorization(Polynom f, int d) {
     if (d == f.degree()) {
         edf.push_back(f);
+        return;
     }
-    Polynom g({0});
-    while(g == 0){
-        g = equal_degree_splitting(f, d);
+    Polynom g = equal_degree_splitting(f, d);
+
+    if (g == 0 || g == f) {
+        edf.push_back(f);
+        return;
     }
 
     equal_degree_factorization(g, d);
@@ -75,7 +72,8 @@ vector<pair<Polynom, long long>> factor_polynomial_over_finite_field(Polynom f, 
         h.push_back(repeated_squaring(h[i - 1], q, f));
         Polynom test = h[i] - h[0];
         Polynom test2 = h[i];
-        Polynom tesst0 = h[0];
+        Polynom test0 = h[0];
+        Polynom v0 = v[i-1];
         Polynom g = gcd(h[i] - h[0], v[i - 1]);
         if (g == 1) {
             break;
@@ -87,7 +85,8 @@ vector<pair<Polynom, long long>> factor_polynomial_over_finite_field(Polynom f, 
             v.push_back(v[i - 1]);
             for (Polynom& g_j : factors) {
                 int e = 0;
-                while (v[i] % g_j == 0) {
+                Polynom as = v[i] % g_j;
+                while (v[i] % g_j == Polynom({0})) {
                     v[i] /= g_j;
                     e++;
                 }
@@ -103,13 +102,14 @@ int main(){
     gs.push_back(Polynom({1}));
     Polynom::setGF(31);
     Polynom::enableGF();
-    Polynom a =  Polynom({1, 4, 6, 4, 1}, "a(x)");
+    Polynom a =  Polynom({27, 30, 9, 14, 1}, "a(x)");
     vector<long long> f(31, 0);
     f.push_back(1);
     Polynom fP(f);
     Polynom b =  Polynom({2, 2, 1}, "b(x)");
-    cout << gcd(fP - Polynom({0, 1}), a) << endl;
-    //vector<pair<Polynom, long long>> factors = factor_polynomial_over_finite_field(a, 31);
+    cout << gcd(Polynom({0, 1}), a) << endl;
+    //cout << Polynom({0, 1}) % 27 << endl;
+    vector<pair<Polynom, long long>> factors = factor_polynomial_over_finite_field(a, 31);
     cout << a << endl;
     cout << b << endl;
     if(a != 1) {
