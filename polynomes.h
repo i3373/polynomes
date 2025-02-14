@@ -5,12 +5,11 @@ using namespace std;
 
 class Polynom {
     private:
-        string name;
         vector<long long> coeffs;
         static long long GF;
         static bool GFEnabled;
     public:
-
+        string name;
         Polynom(){
             coeffs = vector<long long>();
             if(GFEnabled) normaliseGF();

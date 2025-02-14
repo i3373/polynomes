@@ -106,10 +106,20 @@ int main(){
     vector<long long> f(31, 0);
     f.push_back(1);
     Polynom fP(f);
-    Polynom b =  Polynom({2, 2, 1}, "b(x)");
-    cout << gcd(Polynom({0, 1}), a) << endl;
-    //cout << Polynom({0, 1}) % 27 << endl;
-    vector<pair<Polynom, long long>> factors = factor_polynomial_over_finite_field(a, 31);
+    Polynom b =  Polynom({30, 0, 16, 6, 1}, "b(x)");
+    //cout << gcd(Polynom({0, 1}), a) << endl;
+    cout << b / Polynom({6, 5, 1}) << endl;
+    cout << b % Polynom({6, 5, 1}) << endl;
+    vector<pair<Polynom, long long>> factors = factor_polynomial_over_finite_field(b, 31);
+    cout << "Divisors of " << b.name << ":" << endl;
+    for(pair<Polynom, long long> factor : factors) {
+        cout << "Factor: " << factor.first << " Amount: " << factor.second << endl;
+    }
+    vector<pair<Polynom, long long>> factors2 = factor_polynomial_over_finite_field(b, 31);
+    cout << "Divisors of " << b.name << ":" << endl;
+    for(pair<Polynom, long long> factor : factors2) {
+        cout << "Factor: " << factor.first << " Amount: " << factor.second << endl;
+    }
     cout << a << endl;
     cout << b << endl;
     if(a != 1) {
