@@ -67,6 +67,12 @@ class Polynom {
         }
 
 
+        template<typename T, typename = std::enable_if_t<std::is_arithmetic_v<T>>>
+        Polynom& operator=(vector<T> other) {
+            this->coeffs = other;
+            return *this;
+        }
+
         long long& operator[](size_t i) {
             return coeffs.at(i);
         }
@@ -324,6 +330,32 @@ class Polynom {
                 coeffs[i] = 0;
             }
         }
+
+        Polynom derivative() {
+            Polynom result(vector<long long>(coeffs.size() - 1, 0));
+            if (coeffs.size() <= 1) {
+                return Polynom({0});
+            }
+            for(int i = 1; i < coeffs.size(); i++) {
+                result.coeffs[i - 1] = coeffs[i] * i;
+            }
+            result.normaliseGF();
+            result.trimLeadingZeroes();
+            return result;
+        }
+
+        
+        Polynom rootGF(){
+            int p = Polynom::getGF();
+            vector<long long> new_coeffs;
+            
+            for (size_t i = 0; i < coeffs.size(); i += p) {
+                new_coeffs.push_back(coeffs[i]);
+            }
+
+            return Polynom(new_coeffs);
+        }
+
 };
 
 Polynom random(long long degree) {
@@ -336,6 +368,12 @@ Polynom random(long long degree) {
 }
 
 Polynom gcd(Polynom a, Polynom b) {
+    if (a == 0) {
+        return b;
+    }
+    if (b == 0) {
+        return a;
+    }
     while (!b.coeffs.empty()) {
         Polynom temp = a % b;
         a = b;
@@ -344,11 +382,10 @@ Polynom gcd(Polynom a, Polynom b) {
     if(a.degree() == 0) {
         a.coeffs[0] = 1;
     }
-    return a;
+    return a / a.leading_coefficient();
 }
 
 ostream& operator<<(ostream& os, Polynom p) {
-        os << p.name << " = ";
         long long psize = size(p.coeffs) - 1;
         for(long long i = psize; i >= 0; i--){
             long long k = p.coeffs[i];

@@ -28,6 +28,30 @@ Polynom repeated_squaring(Polynom a, long long n, Polynom f){
     return result % f;
 }
 
+vector<pair<Polynom, long long>> square_free_factorization(Polynom f) {
+    vector<pair<Polynom, long long>> R(0);
+    Polynom c = gcd(f, f.derivative());
+    Polynom w = f / c;
+
+    int i = 1;
+    while(w != 1) {
+        Polynom y = gcd(w, c);
+        Polynom fac = w / y;
+        R.push_back({fac, i});
+        w = y;
+        c /= y;
+        i++;
+    }
+    if (c != 1) {
+        c = c.rootGF();
+        vector<pair<Polynom, long long>> newR = square_free_factorization(c);
+        for(pair<Polynom, long long> p : newR) {
+            R.push_back({p.first, Polynom::getGF() * p.second});
+        }
+    }
+    return R;
+}
+
 
 Polynom equal_degree_splitting(Polynom f, int d) {
     for (Polynom a = Polynom::first(f.degree(), Polynom::getGF()); !a.isLast(); a.next()) {
@@ -61,21 +85,24 @@ void equal_degree_factorization(Polynom f, int d) {
     return;
 }
 
-vector<pair<Polynom, long long>> factor_polynomial_over_finite_field(Polynom f, long long q) {
-
+vector<pair<Polynom, long long>> factor_polynomial_over_finite_field(Polynom f) {
     h.push_back(Polynom({0, 1}));
     v.push_back(f / f.leading_coefficient());
     int i = 0;
     vector<pair<Polynom, long long>> U;
     while(v[i] != 1) {
         i++;
-        h.push_back(repeated_squaring(h[i - 1], q, f));
+        h.push_back(repeated_squaring(h[i - 1], Polynom::getGF(), f));
         Polynom test = h[i] - h[0];
         Polynom test2 = h[i];
         Polynom test0 = h[0];
         Polynom v0 = v[i-1];
         Polynom g = gcd(h[i] - h[0], v[i - 1]);
+        gs.push_back(g);
         if (g == 1) {
+            if(v[i - 1] != 1) {
+                U.push_back({v[i - 1], 1});
+            }
             break;
         }
         if (g != 1) {
@@ -85,7 +112,6 @@ vector<pair<Polynom, long long>> factor_polynomial_over_finite_field(Polynom f, 
             v.push_back(v[i - 1]);
             for (Polynom& g_j : factors) {
                 int e = 0;
-                Polynom as = v[i] % g_j;
                 while (v[i] % g_j == Polynom({0})) {
                     v[i] /= g_j;
                     e++;
@@ -97,54 +123,35 @@ vector<pair<Polynom, long long>> factor_polynomial_over_finite_field(Polynom f, 
     return U;
 }
 
+vector<pair<Polynom, long long>> factor(Polynom f) {
+    vector<pair<Polynom, long long>> result = {};
+    vector<pair<Polynom, long long>> R = square_free_factorization(f);
+    for(pair<Polynom, long long> p : R) {
+        vector<pair<Polynom, long long>> factors = factor_polynomial_over_finite_field(p.first);
+        h.clear();
+        gs.clear();
+        v.clear();
+        for(pair<Polynom, long long> factor : factors) {
+            result.push_back({factor.first, factor.second * p.second});
+        }
+    }
+    return result;
+}
+
 
 int main(){
-    gs.push_back(Polynom({1}));
     Polynom::setGF(31);
     Polynom::enableGF();
-    Polynom a =  Polynom({27, 30, 9, 14, 1}, "a(x)");
-    vector<long long> f(31, 0);
+    vector<long long> f(34, 0);
     f.push_back(1);
+    f[4] = -1;
     Polynom fP(f);
-    Polynom b =  Polynom({30, 0, 16, 6, 1}, "b(x)");
-    //cout << gcd(Polynom({0, 1}), a) << endl;
-    cout << b / Polynom({6, 5, 1}) << endl;
-    cout << b % Polynom({6, 5, 1}) << endl;
-    vector<pair<Polynom, long long>> factors = factor_polynomial_over_finite_field(b, 31);
-    cout << "Divisors of " << b.name << ":" << endl;
-    for(pair<Polynom, long long> factor : factors) {
+    cout << fP << endl;
+    vector<pair<Polynom, long long>> result = factor(fP);
+    cout << "Divisors of f"<< ":" << endl;
+    for(pair<Polynom, long long> factor : result) {
         cout << "Factor: " << factor.first << " Amount: " << factor.second << endl;
     }
-    vector<pair<Polynom, long long>> factors2 = factor_polynomial_over_finite_field(b, 31);
-    cout << "Divisors of " << b.name << ":" << endl;
-    for(pair<Polynom, long long> factor : factors2) {
-        cout << "Factor: " << factor.first << " Amount: " << factor.second << endl;
-    }
-    cout << a << endl;
-    cout << b << endl;
-    if(a != 1) {
-        cout << "Equal";
-    } else {
-        cout << "Not Equal";
-    }
-    cout << endl;
-    a += 2;
-    cout << Polynom(a + 2, "a(x) + b(x)");
-    cout << endl;
-    a -= 2;
-    cout << Polynom(a - 2, "a(x) - b(x)");
-    cout << endl;
-    a *= 2;
-    cout << Polynom(a * 2, "a(x) * b(x)");
-    cout << endl;
-    a /= 2;
-    cout << Polynom(a / 2, "a(x) / b(x)");
-    cout << endl;
-    a %= 2;
-    cout << Polynom(a % 2, "a(x) % b(x)") << endl;
-    // for(int i =0; i < 10; i++) {
-    //     cout << power(2, 3) << endl;
-    // }
     
     return 0;
 }
