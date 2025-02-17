@@ -16,9 +16,9 @@ This header file provides a `Polynomial` class and various operations for workin
 
 ### Output Operator:
 - `<<`
+### Factorization over Finite Fields (not GF($p^n$))
 
 ## Planned Features
-- Factorization over Finite Fields
 - Additional comparison operators (`>`, `<`, `>=`, `<=`)
 - Input operator (`>>`)
 - Polynomial initialization from a string
