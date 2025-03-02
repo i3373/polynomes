@@ -132,21 +132,37 @@ vector<pair<Polynom, long long>> factor(Polynom f) {
         gs.clear();
         v.clear();
         for(pair<Polynom, long long> factor : factors) {
-            result.push_back({factor.first, factor.second * p.second});
+            if (factor.second == 0) {
+                continue;
+            }
+            edf.clear();
+            equal_degree_factorization(factor.first, 1);
+            for(Polynom poly : edf) {
+                result.push_back({poly, factor.second * p.second});
+            }
+            //result.push_back({factor.first, factor.second * p.second});
         }
+        factors.clear();
     }
     return result;
 }
 
 
 int main(){
-    Polynom::setGF(31);
+    Polynom::setGF(2);
     Polynom::enableGF();
-    vector<long long> f(34, 0);
+    vector<long long> z(12, 0);
+    z.push_back(1);
+    z[9] = 1;
+    z[6] = 1;
+    z[3] = 1;
+    z[0] = 1;
+    vector<long long> f(1023, 0);
     f.push_back(1);
-    f[4] = -1;
-    Polynom fP(f);
+    f[0] = -1;
+    Polynom fP(f), zp(z);
     cout << fP << endl;
+    //cout << zp % Polynom({1, 1, 0, 0, 1}) << endl;
     vector<pair<Polynom, long long>> result = factor(fP);
     cout << "Divisors of f"<< ":" << endl;
     for(pair<Polynom, long long> factor : result) {

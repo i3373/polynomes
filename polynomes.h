@@ -329,6 +329,7 @@ class Polynom {
                 if (coeffs[i] < GF) return;
                 coeffs[i] = 0;
             }
+            cout << Polynom(coeffs) << endl;
         }
 
         Polynom derivative() {
