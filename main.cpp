@@ -54,8 +54,12 @@ vector<pair<Polynom, long long>> square_free_factorization(Polynom f) {
 
 
 Polynom equal_degree_splitting(Polynom f, int d) {
-    for (Polynom a = Polynom::first(f.degree(), Polynom::getGF()); !a.isLast(); a.next()) {
+    for (Polynom a = Polynom::first(d, Polynom::getGF()); !a.isLast(); a.next()) {
         if (a.degree() == 0 || a.degree() == -1) {
+            continue;
+        }
+
+        if (a.wasChecked()) {
             continue;
         }
 
@@ -63,6 +67,8 @@ Polynom equal_degree_splitting(Polynom f, int d) {
         if (g1 != 1) {
             return g1;
         }    
+
+        a.markChecked();
     }    
     return Polynom({0});
 }
@@ -100,10 +106,11 @@ vector<pair<Polynom, long long>> factor_polynomial_over_finite_field(Polynom f) 
         Polynom g = gcd(h[i] - h[0], v[i - 1]);
         gs.push_back(g);
         if (g == 1) {
-            if(v[i - 1] != 1) {
-                U.push_back({v[i - 1], 1});
+            if(v[i - 1].isIrreducible()) {
+                break;
+            } else {
+                v.push_back(v[i - 1]);
             }
-            break;
         }
         if (g != 1) {
             equal_degree_factorization(g, i);
@@ -132,15 +139,8 @@ vector<pair<Polynom, long long>> factor(Polynom f) {
         gs.clear();
         v.clear();
         for(pair<Polynom, long long> factor : factors) {
-            if (factor.second == 0) {
-                continue;
-            }
-            edf.clear();
-            equal_degree_factorization(factor.first, 1);
-            for(Polynom poly : edf) {
-                result.push_back({poly, factor.second * p.second});
-            }
-            //result.push_back({factor.first, factor.second * p.second});
+           result.push_back({factor.first, factor.second * p.second});
+        
         }
         factors.clear();
     }
@@ -157,9 +157,9 @@ int main(){
     z[6] = 1;
     z[3] = 1;
     z[0] = 1;
-    vector<long long> f(1023, 0);
+    vector<long long> f(1025, 0);
     f.push_back(1);
-    f[0] = -1;
+    f[2] = -1;
     Polynom fP(f), zp(z);
     cout << fP << endl;
     //cout << zp % Polynom({1, 1, 0, 0, 1}) << endl;

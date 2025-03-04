@@ -1,5 +1,6 @@
 #include<iostream>
 #include<vector>
+#include<set>
 
 using namespace std;
 
@@ -8,6 +9,7 @@ class Polynom {
         vector<long long> coeffs;
         static long long GF;
         static bool GFEnabled;
+        static set<vector<long long>> checked_polynoms;  // Для хранения уже проверенных многочленов
     public:
         string name;
         Polynom(){
@@ -311,9 +313,9 @@ class Polynom {
         friend Polynom random(long long degree);
 
         static Polynom first(int degree, int q) {
-            vector<long long> coeffs(degree + 1, 0);
-            coeffs[1] = 1;
-            return Polynom(coeffs);
+            vector<long long> new_coeffs(degree + 1, 0);
+            new_coeffs[degree] = 1;
+            return Polynom(new_coeffs);
         }
 
         bool isLast() {
@@ -357,7 +359,80 @@ class Polynom {
             return Polynom(new_coeffs);
         }
 
+        Polynom repeatedSquaring(Polynom a, long long n, Polynom f) {
+            Polynom result({1});
+            while(n > 0) {
+                if (n % 2 == 1) {
+                    result *= a;
+                    result %= f;
+                }
+                a *= a;
+                a %= f;
+                n /= 2;
+            }
+            return result;
+        }
+
+        bool hasLinearFactors() {
+            // Check if polynomial has any roots in the field
+            for (long long a = 0; a < GF; a++) {
+                // Evaluate polynomial at x = a
+                long long result = 0;
+                for (long long i = 0; i < coeffs.size(); i++) {
+                    // Using Horner's method: result = result * x + coefficient
+                    result = (result * a + coeffs[i]) % GF;
+                    if (result < 0) result += GF;  // Normalize negative values
+                }
+                if (result == 0) {
+                    return true;  // Found a root, therefore has linear factor (x - a)
+                }
+            }
+            return false;  // No roots found
+        }
+
+        bool isIrreducible() {
+            if (degree() <= 0) return false;
+            if (degree() == 1) return true;
+            
+            if (hasLinearFactors()) return false;
+
+            Polynom x({0, 1}); // represents x
+            long long qPower = GF; // This will be q^n
+            
+            for (long long n = 1; n <= degree()/2; n++) {
+                // Calculate x^(q^n) using repeated squaring
+                Polynom xq = repeatedSquaring(x, qPower, *this);
+                
+                // Check if gcd(this, x^(q^n) - x) is 1
+                Polynom diff = xq - x;
+                Polynom g = gcd(*this, diff);
+                
+                if (g.degree() > 0) {
+                    return false;
+                }
+
+                qPower *= GF; // For next iteration we need q^(n+1)
+            }
+            
+            return true;
+        }
+
+        static void clearCheckedPolynoms() {
+            checked_polynoms.clear();
+        }
+
+        bool wasChecked() const {
+            return checked_polynoms.find(coeffs) != checked_polynoms.end();
+        }
+
+        void markChecked() {
+            checked_polynoms.insert(coeffs);
+        }
+
 };
+
+// Инициализация статического члена
+set<vector<long long>> Polynom::checked_polynoms;
 
 Polynom random(long long degree) {
     Polynom a;
