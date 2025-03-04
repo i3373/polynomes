@@ -431,14 +431,16 @@ class Polynom {
 
 };
 
-// Инициализация статического члена
 set<vector<long long>> Polynom::checked_polynoms;
 
 Polynom random(long long degree) {
     Polynom a;
-    for(int i = rand() % degree; i > 0; i--) {
-        a.coeffs.push_back(rand() % a.GF);
+    a.coeffs.resize(degree + 1, 0);
+    
+    for(int i = 0; i <= degree; i++) {
+        a.coeffs[i] = rand() % Polynom::getGF();
     }
+    
     a.trimLeadingZeroes();
     return a;
 }

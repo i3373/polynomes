@@ -3,7 +3,8 @@
 #include"polynomes.h"
 
 long long Polynom::GF = LLONG_MAX - 1;
-bool Polynom::GFEnabled = false;
+bool Polynom::GFEnabled = false, iterative_polynomial_generation = false;
+
 
 vector<Polynom> h, v, gs, edf;
 
@@ -54,6 +55,7 @@ vector<pair<Polynom, long long>> square_free_factorization(Polynom f) {
 
 
 Polynom equal_degree_splitting(Polynom f, int d) {
+    if(iterative_polynomial_generation) {
     for (Polynom a = Polynom::first(d, Polynom::getGF()); !a.isLast(); a.next()) {
         if (a.degree() == 0 || a.degree() == -1) {
             continue;
@@ -62,15 +64,43 @@ Polynom equal_degree_splitting(Polynom f, int d) {
         if (a.wasChecked()) {
             continue;
         }
+        a.markChecked();
+        Polynom g1 = gcd(a, f);
+        if (g1 != 1) {
+            return g1;
+        }         
+    }    
+    return Polynom({0});
+    } else {
+        while (true) {
+        // Generate a random polynomial of degree less than f.degree()
+        Polynom a = random(d);
+        
+        if (a.degree() == 0 || a.degree() == -1) {
+            continue;
+        }
+
+        if (a.wasChecked()) {
+            continue;
+        }
+
+        a.markChecked();
 
         Polynom g1 = gcd(a, f);
         if (g1 != 1) {
             return g1;
         }    
 
-        a.markChecked();
+        // Polynom b = repeated_squaring(a, (power(Polynom::getGF(), d) - 1) / 2, f);
+        // Polynom g2 = gcd(b - 1, f);
+        // if (g2 != 1 && g2 != f) {
+        //     return g2;
+        // } else {
+        //     continue;
+        // }
     }    
     return Polynom({0});
+    }
 }
 
 
@@ -168,6 +198,8 @@ int main(){
     for(pair<Polynom, long long> factor : result) {
         cout << "Factor: " << factor.first << " Amount: " << factor.second << endl;
     }
-    
+    cout << Polynom({1, 1, 0, 0, 0, 0, 1, 0, 0, 1, 1, 1, 0, 1, 1, 1, 0, 1, 0, 1, 1,0,1,1,0,0,0,0,1,1,1,0,0,0,0,0,0,0,1,1,0,0,1,0,1,0,1,1,0,1,1}) << endl;
+    cout << Polynom({1, 1, 0, 0, 0, 0, 1, 0, 0, 1, 1, 1, 0, 1, 1, 1, 0, 1, 0, 1, 1,0,1,1,0,0,0,0,1,1,1,0,0,0,0,0,0,0,1,1,0,0,1,0,1,0,1,1,0,1,1}).isIrreducible() << endl;
+
     return 0;
 }
