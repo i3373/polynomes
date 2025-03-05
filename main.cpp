@@ -3,15 +3,19 @@
 #include"polynomes.h"
 
 long long Polynom::GF = LLONG_MAX - 1;
-bool Polynom::GFEnabled = false, iterative_polynomial_generation = false;
+bool Polynom::GFEnabled = false, Polynom::RandomEnabled = true;
 
 
 vector<Polynom> h, v, gs, edf;
 
 long long power(long long a, long long exp) {
-    long long result = a;
-    for(int i = 1; i < exp; i++) {
-        result *= a;
+    long long result = 1;
+    while (exp > 0) {
+        if (exp % 2 == 1) {
+            result *= a;
+        }
+        a *= a;
+        exp /= 2;
     }
     return result;
 }
@@ -55,51 +59,45 @@ vector<pair<Polynom, long long>> square_free_factorization(Polynom f) {
 
 
 Polynom equal_degree_splitting(Polynom f, int d) {
-    if(iterative_polynomial_generation) {
-    for (Polynom a = Polynom::first(d, Polynom::getGF()); !a.isLast(); a.next()) {
-        if (a.degree() == 0 || a.degree() == -1) {
-            continue;
-        }
-
-        if (a.wasChecked()) {
-            continue;
-        }
-        a.markChecked();
-        Polynom g1 = gcd(a, f);
-        if (g1 != 1) {
-            return g1;
-        }         
-    }    
-    return Polynom({0});
-    } else {
+    if (Polynom::isRandomEnabled()) {
         while (true) {
-        // Generate a random polynomial of degree less than f.degree()
-        Polynom a = random(d);
-        
-        if (a.degree() == 0 || a.degree() == -1) {
-            continue;
+            Polynom a = random(f.degree() - 1);
+            
+            if (a.degree() <= 0 || a.wasChecked()) {
+                continue;
+            }
+
+            a.markChecked();
+
+            Polynom g1 = gcd(a, f);
+            if (g1 != 1) {
+                return g1;
+            }
+
+            // Polynom b = repeated_squaring(a, (power(Polynom::getGF(), d) - 1) / 2, f);
+            // Polynom g2 = gcd(b - 1, f);
+            // if (g2 != 1 && g2 != f) {
+            //     return g2;
+            // }
         }
+        return Polynom({0});
+    } else {
+        for (Polynom a = Polynom::first(d, Polynom::getGF()); !a.isLast(); a.next()) {
+            if (a.degree() == 0 || a.degree() == -1) {
+                continue;
+            }
 
-        if (a.wasChecked()) {
-            continue;
+            if (a.wasChecked()) {
+                continue;
+            }
+
+            a.markChecked();
+            Polynom g1 = gcd(a, f);
+            if (g1 != 1) {
+                return g1;
+            }
         }
-
-        a.markChecked();
-
-        Polynom g1 = gcd(a, f);
-        if (g1 != 1) {
-            return g1;
-        }    
-
-        // Polynom b = repeated_squaring(a, (power(Polynom::getGF(), d) - 1) / 2, f);
-        // Polynom g2 = gcd(b - 1, f);
-        // if (g2 != 1 && g2 != f) {
-        //     return g2;
-        // } else {
-        //     continue;
-        // }
-    }    
-    return Polynom({0});
+        return Polynom({0});
     }
 }
 
@@ -110,8 +108,9 @@ void equal_degree_factorization(Polynom f, int d) {
         return;
     }
     Polynom g = equal_degree_splitting(f, d);
+    
 
-    if (g == 0 || g == f) {
+    if (g == f) {
         edf.push_back(f);
         return;
     }
@@ -181,25 +180,17 @@ vector<pair<Polynom, long long>> factor(Polynom f) {
 int main(){
     Polynom::setGF(2);
     Polynom::enableGF();
-    vector<long long> z(12, 0);
-    z.push_back(1);
-    z[9] = 1;
-    z[6] = 1;
-    z[3] = 1;
-    z[0] = 1;
+    Polynom::enableRandom();
     vector<long long> f(1025, 0);
     f.push_back(1);
     f[2] = -1;
-    Polynom fP(f), zp(z);
+    Polynom fP(f);
     cout << fP << endl;
-    //cout << zp % Polynom({1, 1, 0, 0, 1}) << endl;
     vector<pair<Polynom, long long>> result = factor(fP);
     cout << "Divisors of f"<< ":" << endl;
     for(pair<Polynom, long long> factor : result) {
         cout << "Factor: " << factor.first << " Amount: " << factor.second << endl;
     }
-    cout << Polynom({1, 1, 0, 0, 0, 0, 1, 0, 0, 1, 1, 1, 0, 1, 1, 1, 0, 1, 0, 1, 1,0,1,1,0,0,0,0,1,1,1,0,0,0,0,0,0,0,1,1,0,0,1,0,1,0,1,1,0,1,1}) << endl;
-    cout << Polynom({1, 1, 0, 0, 0, 0, 1, 0, 0, 1, 1, 1, 0, 1, 1, 1, 0, 1, 0, 1, 1,0,1,1,0,0,0,0,1,1,1,0,0,0,0,0,0,0,1,1,0,0,1,0,1,0,1,1,0,1,1}).isIrreducible() << endl;
-
+    
     return 0;
 }
